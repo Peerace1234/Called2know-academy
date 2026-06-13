@@ -1,5 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
+
+const WHATSAPP_NUMBER = "2347062653364";
+
+function sendToWhatsApp(message) {
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+}
 
 const modules = [
   {
@@ -359,6 +366,67 @@ function StartHere({ setActivePage }) {
     ["I want mentorship", "Daniel Pods"],
   ];
 
+  const [situation, setSituation] = useState("");
+  const [result, setResult] = useState(null);
+
+  function generatePathway() {
+    const text = situation.toLowerCase();
+    let recommendation;
+
+    if (/(lazy|procrastinat|motivat|distract|sleep|wake)/.test(text)) {
+      recommendation = {
+        title: "7-Day Academic Awakening",
+        page: "Programs",
+        advice:
+          "Start with the 7-Day Academic Awakening to reset your mindset and build daily discipline. Pair it with a Daniel Pod for accountability.",
+      };
+    } else if (/(fail|carryover|repeat|retake)/.test(text)) {
+      recommendation = {
+        title: "Failure Is Not Final",
+        page: "Programs",
+        advice:
+          "Begin with Failure Is Not Final to process shame and rebuild your study system, then move into Exam Mastery before your next attempt.",
+      };
+    } else if (/(cheat|exam malpractice|copy|shortcut)/.test(text)) {
+      recommendation = {
+        title: "Integrity Pledge",
+        page: "Start Here",
+        advice:
+          "Take the Integrity Pledge and explore Exam Mastery — strategy and preparation that removes the temptation to cheat.",
+      };
+    } else if (/(purpose|calling|why|meaning|career|future)/.test(text)) {
+      recommendation = {
+        title: "Course-to-Kingdom",
+        page: "Course-to-Kingdom",
+        advice:
+          "Explore Course-to-Kingdom to see how your specific discipline connects to real kingdom service and purpose.",
+      };
+    } else if (/(alone|isolat|mentor|accountab|group|pod)/.test(text)) {
+      recommendation = {
+        title: "Daniel Pods",
+        page: "Daniel Pods",
+        advice:
+          "Join a Daniel Pod — a small group of students who pray, study, and hold each other accountable weekly.",
+      };
+    } else if (/(exam|test|study hall|revis)/.test(text)) {
+      recommendation = {
+        title: "Exam Mastery",
+        page: "Exam Mastery",
+        advice:
+          "Visit Exam Mastery for examiner psychology, strategy, and a pre-exam checklist, and join the Upper Room Study Hall for focused sprints.",
+      };
+    } else {
+      recommendation = {
+        title: "30-Day Daniel Discipline Challenge",
+        page: "Programs",
+        advice:
+          "Start with the 30-Day Daniel Discipline Challenge to build a strong foundation of study rhythm, theology of study, and service.",
+      };
+    }
+
+    setResult(recommendation);
+  }
+
   return (
     <main className="page">
       <section className="section page-intro">
@@ -369,6 +437,41 @@ function StartHere({ setActivePage }) {
           academic life. You are called to pray, worship, think, study, design,
           research, solve, build, and serve with excellence.
         </p>
+      </section>
+
+      <section className="section">
+        <h2>Get Your Personalized Pathway</h2>
+        <div className="card pathway-advisor">
+          <p>
+            Tell us what you're struggling with, and we'll recommend the right
+            pathway for you.
+          </p>
+          <textarea
+            placeholder="Example: I keep failing my exams and I feel discouraged..."
+            value={situation}
+            onChange={(e) => setSituation(e.target.value)}
+          />
+          <button
+            className="primary-btn"
+            onClick={generatePathway}
+            disabled={!situation.trim()}
+          >
+            Get My Pathway
+          </button>
+
+          {result && (
+            <div className="pathway-result">
+              <h3>Recommended: {result.title}</h3>
+              <p>{result.advice}</p>
+              <button
+                className="small-btn"
+                onClick={() => setActivePage(result.page)}
+              >
+                Open Pathway
+              </button>
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="section">
@@ -507,7 +610,16 @@ function Programs() {
                   <li key={lesson}>{lesson}</li>
                 ))}
               </ul>
-              <button className="small-btn">Start Program</button>
+              <button
+                className="small-btn"
+                onClick={() =>
+                  sendToWhatsApp(
+                    `Hi, I would like to start the *${program.title}* program. Please guide me on next steps.`
+                  )
+                }
+              >
+                Start Program
+              </button>
             </div>
           ))}
         </div>
@@ -524,12 +636,17 @@ function Dashboard() {
     distraction: "",
     score: "3",
   });
+  const [submitted, setSubmitted] = useState(false);
 
   function updateField(e) {
     setCheckIn({
       ...checkIn,
       [e.target.name]: e.target.value,
     });
+  }
+
+  function handleSubmitCheckIn() {
+    setSubmitted(true);
   }
 
   return (
@@ -595,7 +712,14 @@ function Dashboard() {
             />
           </label>
 
-          <button className="primary-btn">Submit Check-In</button>
+          <button className="primary-btn" onClick={handleSubmitCheckIn}>
+            Submit Check-In
+          </button>
+          {submitted && (
+            <p className="form-success">
+              ✅ Check-in saved! Stay faithful today.
+            </p>
+          )}
         </div>
 
         <div className="panel">
@@ -637,6 +761,31 @@ function Dashboard() {
 }
 
 function DanielPods() {
+  const [pod, setPod] = useState({
+    name: "",
+    department: "",
+    level: "",
+    need: "",
+  });
+
+  function updatePod(e) {
+    setPod({ ...pod, [e.target.name]: e.target.value });
+  }
+
+  function requestPlacement() {
+    if (!pod.name || !pod.department || !pod.level || !pod.need) {
+      alert("Please fill in all fields before submitting.");
+      return;
+    }
+    const message =
+      `*New Daniel Pod Placement Request*\n\n` +
+      `Name: ${pod.name}\n` +
+      `Department: ${pod.department}\n` +
+      `Level: ${pod.level}\n` +
+      `Main Need: ${pod.need}`;
+    sendToWhatsApp(message);
+  }
+
   return (
     <main className="page">
       <section className="section page-intro">
@@ -675,17 +824,37 @@ function DanielPods() {
 
         <div className="pod-form">
           <h3>Join a Pod</h3>
-          <input placeholder="Full name" />
-          <input placeholder="Department" />
-          <input placeholder="Level" />
-          <select>
-            <option>Choose your main need</option>
+          <input
+            name="name"
+            placeholder="Full name"
+            value={pod.name}
+            onChange={updatePod}
+          />
+          <input
+            name="department"
+            placeholder="Department"
+            value={pod.department}
+            onChange={updatePod}
+          />
+          <input
+            name="level"
+            placeholder="Level"
+            value={pod.level}
+            onChange={updatePod}
+          />
+          <select name="need" value={pod.need} onChange={updatePod}>
+            <option value="">Choose your main need</option>
             <option>Consistency</option>
             <option>Exam preparation</option>
             <option>Failed course recovery</option>
             <option>Course-to-calling clarity</option>
           </select>
-          <button className="primary-btn">Request Pod Placement</button>
+          <button className="primary-btn" onClick={requestPlacement}>
+            Request Pod Placement
+          </button>
+          <p className="form-hint">
+            This will open WhatsApp to send your request to our mentors.
+          </p>
         </div>
       </section>
     </main>
@@ -693,6 +862,33 @@ function DanielPods() {
 }
 
 function StudyHall() {
+  const [secondsLeft, setSecondsLeft] = useState(25 * 60);
+  const [running, setRunning] = useState(false);
+
+  useEffect(() => {
+    if (!running) return;
+    if (secondsLeft <= 0) {
+      setRunning(false);
+      setSecondsLeft(25 * 60);
+      return;
+    }
+    const id = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [running, secondsLeft]);
+
+  function toggleTimer() {
+    setRunning((r) => !r);
+  }
+
+  function joinLiveRoom() {
+    sendToWhatsApp(
+      "Hi, I would like to join the live Upper Room Study Hall session. Please send me the link."
+    );
+  }
+
+  const mins = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+  const secs = String(secondsLeft % 60).padStart(2, "0");
+
   return (
     <main className="page">
       <section className="section page-intro">
@@ -707,9 +903,16 @@ function StudyHall() {
       <section className="section study-hall-layout">
         <div className="timer-card">
           <h3>Current Study Sprint</h3>
-          <div className="timer">25:00</div>
+          <div className="timer">
+            {mins}:{secs}
+          </div>
           <p>Focus deeply. Study as worship.</p>
-          <button className="primary-btn">Join Live Room</button>
+          <button className="secondary-btn" onClick={toggleTimer}>
+            {running ? "Pause Sprint" : "Start Sprint"}
+          </button>
+          <button className="primary-btn" onClick={joinLiveRoom}>
+            Join Live Room
+          </button>
         </div>
 
         <div className="card">
@@ -737,6 +940,30 @@ function StudyHall() {
 }
 
 function ExamMastery() {
+  const checklistItems = [
+    "I prayed without presumption.",
+    "I read all instructions.",
+    "I chose my best question first.",
+    "I allocated time wisely.",
+    "I avoided panic.",
+    "I wrote clearly.",
+    "I showed method.",
+    "I answered subparts together.",
+    "I refused malpractice.",
+  ];
+
+  const [checked, setChecked] = useState(
+    Array(checklistItems.length).fill(false)
+  );
+
+  function toggleItem(index) {
+    setChecked((prev) =>
+      prev.map((val, i) => (i === index ? !val : val))
+    );
+  }
+
+  const completedCount = checked.filter(Boolean).length;
+
   return (
     <main className="page">
       <section className="section page-intro">
@@ -770,25 +997,26 @@ function ExamMastery() {
       </section>
 
       <section className="section checklist">
-        <h2>Exam Hall Checklist</h2>
+        <h2>
+          Exam Hall Checklist ({completedCount}/{checklistItems.length})
+        </h2>
         <div className="checklist-grid">
-          {[
-            "I prayed without presumption.",
-            "I read all instructions.",
-            "I chose my best question first.",
-            "I allocated time wisely.",
-            "I avoided panic.",
-            "I wrote clearly.",
-            "I showed method.",
-            "I answered subparts together.",
-            "I refused malpractice.",
-          ].map((item) => (
+          {checklistItems.map((item, index) => (
             <label key={item}>
-              <input type="checkbox" />
+              <input
+                type="checkbox"
+                checked={checked[index]}
+                onChange={() => toggleItem(index)}
+              />
               {item}
             </label>
           ))}
         </div>
+        {completedCount === checklistItems.length && (
+          <p className="form-success">
+            ✅ You're fully prepared. Go in faith!
+          </p>
+        )}
       </section>
     </main>
   );
@@ -864,6 +1092,31 @@ function CourseToKingdom() {
 }
 
 function Testimonies() {
+  const [form, setForm] = useState({
+    name: "",
+    title: "",
+    category: "",
+    text: "",
+  });
+
+  function updateForm(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
+
+  function submitTestimony() {
+    if (!form.name || !form.title || !form.category || !form.text) {
+      alert("Please fill in all fields before submitting.");
+      return;
+    }
+    const message =
+      `*New Testimony Submission*\n\n` +
+      `Name: ${form.name}\n` +
+      `Title: ${form.title}\n` +
+      `Category: ${form.category}\n\n` +
+      `Testimony:\n${form.text}`;
+    sendToWhatsApp(message);
+  }
+
   return (
     <main className="page">
       <section className="section page-intro">
@@ -889,10 +1142,20 @@ function Testimonies() {
 
       <section className="section testimony-form">
         <h2>Share Your Testimony</h2>
-        <input placeholder="Your name" />
-        <input placeholder="Testimony title" />
-        <select>
-          <option>Choose category</option>
+        <input
+          name="name"
+          placeholder="Your name"
+          value={form.name}
+          onChange={updateForm}
+        />
+        <input
+          name="title"
+          placeholder="Testimony title"
+          value={form.title}
+          onChange={updateForm}
+        />
+        <select name="category" value={form.category} onChange={updateForm}>
+          <option value="">Choose category</option>
           <option>I overcame laziness</option>
           <option>I stopped cheating</option>
           <option>I passed a failed course</option>
@@ -900,8 +1163,18 @@ function Testimonies() {
           <option>I found purpose in my course</option>
           <option>I saw God in my research</option>
         </select>
-        <textarea placeholder="Write your testimony..." />
-        <button className="primary-btn">Submit Testimony</button>
+        <textarea
+          name="text"
+          placeholder="Write your testimony..."
+          value={form.text}
+          onChange={updateForm}
+        />
+        <button className="primary-btn" onClick={submitTestimony}>
+          Submit Testimony
+        </button>
+        <p className="form-hint">
+          This will open WhatsApp to send your testimony to our team.
+        </p>
       </section>
     </main>
   );
